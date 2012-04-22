@@ -21,15 +21,15 @@ sub initialize {
              $w->{files}->setDirectory($self->{files}->{directory});
              $w->widget()->show_all();
          }),
-         $self->menuItem("Open", sub { $self->open(); }),
-         $self->menuItem("Refresh", sub { $self->refresh(); }),
-         $self->menuItem("Close", sub {
+         $self->menuItem("gtk-open", sub { $self->open(); }),
+         $self->menuItem("gtk-refresh", sub { $self->refresh(); }),
+         $self->menuItem("gtk-close", sub {
              $self->{menubar}->get_ancestor('Gtk2::Window')->destroy();
                          }),
-         $self->menuItem("Quit", sub { Gtk2->main_quit(); }));
+         $self->menuItem("gtk-quit", sub { Gtk2->main_quit(); }));
     my $helpmenu = $self->populateMenu
         (new Gtk2::Menu(),
-         $self->menuItem("About", sub { $self->about(); }));
+         $self->menuItem("gtk-about", sub { $self->about(); }));
     # TODO there should be an 'About' menu
     $self->{menubar} = $self->populateMenu
         (new Gtk2::MenuBar(),
@@ -63,7 +63,12 @@ sub populateMenu {
 # Returns the menu item.
 sub menuItem($$$) {
     my ($self, $label, $child) = @_;
-    my $item = new Gtk2::MenuItem($label);
+    my $item;
+    if($label =~ /^gtk-/) {
+        $item = Gtk2::ImageMenuItem->new_from_stock($label);
+    } else {
+        $item = new Gtk2::MenuItem($label);
+    }
     if(ref $child eq 'CODE') { $item->signal_connect("activate" => $child); }
     else { $item->set_submenu($child); }
     return $item;
