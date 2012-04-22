@@ -213,6 +213,7 @@ sub setDirectory($$) {
     $new =~ s,/+$,, unless $new =~ m,^/+$,;
     return if exists $self->{directory} and $new eq $self->{directory};
     $self->{directory} = $new;
+    $self->{view}->get_ancestor('Gtk2::Window')->set_title("viewgcov $new");
     $self->refresh();
 }
 
