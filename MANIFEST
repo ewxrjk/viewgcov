@@ -1,0 +1,10 @@
+MANIFEST
+Makefile.PL
+README
+COPYING
+lib/Greenend/ViewGCOV/AnnotatedFile.pm
+lib/Greenend/ViewGCOV/FileContents.pm
+lib/Greenend/ViewGCOV/FileList.pm
+lib/Greenend/ViewGCOV/MenuBar.pm
+lib/Greenend/ViewGCOV/Window.pm
+bin/viewgcov

@@ -5,6 +5,38 @@ use Gtk2 '-init';
 use Greenend::ViewGCOV::AnnotatedFile;
 use Greenend::ViewGCOV::Window;
 
+=head1 NAME
+
+viewgcov - view gcov output
+
+=head1 SYNOPSIS
+
+B<viewgcov> [I<OPTIONS>] [B<-->] I<DIRECTORY>
+
+=head1 DESCRIPTION
+
+This program display all the B<*.gcov> files below I<DIRECTORY>, in
+descending coverage order.  Click on the filenames to see the
+contents, with uncovered lines marked in read.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<--help>
+
+Displays a usage message.
+
+=back
+
+=head1 AUTHOR
+
+Richard Kettlewell <rjk@greenend.org.uk>
+
+=cut
+
+our $VERSION = '0.1';
+
 # Command line ----------------------------------------------------------------
 
 while(@ARGV > 0 and $ARGV[0] =~ /^-/) {
@@ -20,10 +52,13 @@ Options:
 Displays gcov output files below DIRECTORY (default=".").
 ";
         exit 0;
+    } elsif($opt eq '--version') {
+        print "$VERSION\n";
+        exit 0;
     } elsif($opt eq "--") {
         last;
     } else {
-        die "ERROR: unknown option '$_'\n";
+        die "ERROR: unknown option '$opt'\n";
     }
 }
 
