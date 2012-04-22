@@ -1,7 +1,8 @@
 package Greenend::ViewGCOV::MenuBar;
+use warnings;
+use strict;
 use Greenend::ViewGCOV::Window;
 use Gtk2;
-use warnings;
 
 # new MenuBar(FILELIST, FILECONTENTS)
 sub new {

@@ -1,5 +1,6 @@
 package Greenend::ViewGCOV::Window;
 use warnings;
+use strict;
 use Gtk2;
 use Greenend::ViewGCOV::FileList;
 use Greenend::ViewGCOV::FileContents;

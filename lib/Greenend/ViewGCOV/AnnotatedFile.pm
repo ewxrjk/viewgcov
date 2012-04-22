@@ -1,6 +1,6 @@
 package Greenend::ViewGCOV::AnnotatedFile;
-
 use warnings;
+use strict;
 use IO::File;
 
 sub new {

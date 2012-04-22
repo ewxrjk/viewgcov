@@ -1,6 +1,7 @@
 package Greenend::ViewGCOV::FileContents;
-use Gtk2;
 use warnings;
+use strict;
+use Gtk2;
 
 our $notExecutableBackground = "#ffffff";
 our $notExecutableForeground = "#808080";

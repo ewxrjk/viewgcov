@@ -1,6 +1,7 @@
 package Greenend::ViewGCOV::FileList;
-use Gtk2;
 use warnings;
+use strict;
+use Gtk2;
 
 our $openProgram = "gnome-open";
 
@@ -122,7 +123,7 @@ sub contextMenu($$$) {
          Greenend::ViewGCOV::MenuBar::menuItem
          ('gtk-refresh',
           sub {
-              $af = new Greenend::ViewGCOV::AnnotatedFile($path);
+              my $af = new Greenend::ViewGCOV::AnnotatedFile($path);
               if(defined $af) {
                   $self->{files}->{$path} = $af;
                   $self->{contents}->redraw();
