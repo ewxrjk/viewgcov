@@ -1,4 +1,5 @@
 package Greenend::ViewGCOV::MenuBar;
+use Greenend::ViewGCOV::Window;
 use Gtk2;
 use warnings;
 
@@ -15,8 +16,16 @@ sub initialize {
     $self->{contents} = shift;
     my $filemenu = $self->populateMenu
         (new Gtk2::Menu(),
+         $self->menuItem("New Window", sub {
+             my $w = new Greenend::ViewGCOV::Window();
+             $w->{files}->setDirectory($self->{files}->{directory});
+             $w->widget()->show_all();
+         }),
          $self->menuItem("Open", sub { $self->open(); }),
          $self->menuItem("Refresh", sub { $self->refresh(); }),
+         $self->menuItem("Close", sub {
+             $self->{menubar}->get_ancestor('Gtk2::Window')->destroy();
+                         }),
          $self->menuItem("Quit", sub { Gtk2->main_quit(); }));
     # TODO there should be an 'About' menu
     $self->{menubar} = $self->populateMenu

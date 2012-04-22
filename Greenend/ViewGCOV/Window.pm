@@ -5,6 +5,8 @@ use Greenend::ViewGCOV::FileList;
 use Greenend::ViewGCOV::FileContents;
 use Greenend::ViewGCOV::MenuBar;
 
+my $windowCount;
+
 # new Window()
 sub new {
     my $self = bless {}, shift;
@@ -13,8 +15,11 @@ sub new {
 
 sub initialize($) {
     my $self = shift;
+    ++$windowCount;
     $self->{window} = new Gtk2::Window('toplevel');
-    $self->{window}->signal_connect(destroy => sub { Gtk2->main_quit(); });
+    $self->{window}->signal_connect(destroy => sub {
+        Gtk2->main_quit() if !--$windowCount;
+    });
     $self->{files} = new Greenend::ViewGCOV::FileList
         (sub { $self->{contents}->select(shift); });
     $self->{contents} = new Greenend::ViewGCOV::FileContents($self->{files});
