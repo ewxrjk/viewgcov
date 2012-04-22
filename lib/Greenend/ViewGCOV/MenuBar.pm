@@ -81,6 +81,7 @@ sub open($) {
          'select-folder',
          'gtk-cancel' => 'cancel',
          'gtk-ok' => 'ok');
+    $chooser->set_current_folder($self->{files}->{directory});
     $self->{files}->setDirectory($chooser->get_filename())
         if $chooser->run() eq 'ok';
     $chooser->destroy();
