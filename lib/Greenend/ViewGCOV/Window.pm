@@ -20,9 +20,10 @@ sub initialize($) {
     $self->{window}->signal_connect(destroy => sub {
         Gtk2->main_quit() if !--$windowCount;
     });
-    $self->{files} = new Greenend::ViewGCOV::FileList
-        (sub { $self->{contents}->select(shift); });
-    $self->{contents} = new Greenend::ViewGCOV::FileContents($self->{files});
+    $self->{files} = new Greenend::ViewGCOV::FileList();
+    $self->{contents} = new Greenend::ViewGCOV::FileContents();
+    $self->{files}->setContents($self->{contents});
+    $self->{contents}->setFiles($self->{files});
     $self->{menubar} = new Greenend::ViewGCOV::MenuBar
         ($self->{files}, $self->{contents});
     my $box = new Gtk2::VBox(0, 0);

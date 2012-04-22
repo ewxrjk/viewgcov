@@ -10,16 +10,15 @@ our $executedBackground = "#ffffff";
 our $executedForeground = "#000000";
 # TODO above should be configurable
 
-# new FileContents(FILELIST)
+# new FileContents()
 sub new {
     my $self = bless {}, shift;
     return $self->initialize(@_);
 }
 
-# initialize(FILELIST)
+# initialize()
 sub initialize {
     my $self = shift;
-    $self->{files} = shift;
     $self->{model} = new Gtk2::ListStore('Glib::Int', # line number
                                          'Glib::String', # times executed
                                          'Glib::String', # program text
@@ -58,6 +57,14 @@ sub initialize {
     $self->{scrolled}->set_policy('automatic', 'automatic');
     $self->{scrolled}->add($self->{view});
     return $self;
+}
+
+# setFiles(FILEFILES)
+#
+# The list of files
+sub setFiles($$) {
+    my $self = shift;
+    $self->{files} = shift;
 }
 
 # Return the widget to display
@@ -115,16 +122,6 @@ sub redraw($) {
     }
     $self->{view}->scroll_to_cell(Gtk2::TreePath->new_from_indices($where));
     return $self;
-}
-
-# Called after a refresh
-sub refresh($) {
-    my $self = shift;
-    if(defined $self->{current} and !$self->{files}->has($self->current)) {
-        return $self->clear();
-    } else {
-        return $self->redraw();
-    }
 }
 
 1;

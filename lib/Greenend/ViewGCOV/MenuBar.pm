@@ -14,27 +14,27 @@ sub initialize {
     my $self = shift;
     $self->{files} = shift;
     $self->{contents} = shift;
-    my $filemenu = $self->populateMenu
+    my $filemenu = populateMenu
         (new Gtk2::Menu(),
-         $self->menuItem("New Window", sub {
+         menuItem("New Window", sub {
              my $w = new Greenend::ViewGCOV::Window();
              $w->{files}->setDirectory($self->{files}->{directory});
              $w->widget()->show_all();
          }),
-         $self->menuItem("gtk-open", sub { $self->open(); }),
-         $self->menuItem("gtk-refresh", sub { $self->refresh(); }),
-         $self->menuItem("gtk-close", sub {
+         menuItem("gtk-open", sub { $self->open(); }),
+         menuItem("gtk-refresh", sub { $self->refresh(); }),
+         menuItem("gtk-close", sub {
              $self->{menubar}->get_ancestor('Gtk2::Window')->destroy();
                          }),
-         $self->menuItem("gtk-quit", sub { Gtk2->main_quit(); }));
-    my $helpmenu = $self->populateMenu
+         menuItem("gtk-quit", sub { Gtk2->main_quit(); }));
+    my $helpmenu = populateMenu
         (new Gtk2::Menu(),
-         $self->menuItem("gtk-about", sub { $self->about(); }));
+         menuItem("gtk-about", sub { $self->about(); }));
     # TODO there should be an 'About' menu
-    $self->{menubar} = $self->populateMenu
+    $self->{menubar} = populateMenu
         (new Gtk2::MenuBar(),
-         $self->menuItem("File", $filemenu),
-         $self->menuItem("Help", $helpmenu));
+         menuItem("File", $filemenu),
+         menuItem("Help", $helpmenu));
     return $self;
 }
 
@@ -48,7 +48,6 @@ sub widget($) {
 #
 # Add each ITEM to SHELL.  ITEMs can be menu items or submenus.
 sub populateMenu {
-    my $self = shift;
     my $shell = shift;
     for my $item (@_) { $shell->append($item); }
     return $shell;
@@ -61,8 +60,8 @@ sub populateMenu {
 # Otherwise CHILD must be a submenu.
 #
 # Returns the menu item.
-sub menuItem($$$) {
-    my ($self, $label, $child) = @_;
+sub menuItem($$) {
+    my ($label, $child) = @_;
     my $item;
     if($label =~ /^gtk-/) {
         $item = Gtk2::ImageMenuItem->new_from_stock($label);

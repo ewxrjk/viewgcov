@@ -2,19 +2,18 @@ package Greenend::ViewGCOV::FileList;
 use Gtk2;
 use warnings;
 
-# new FileList(CHOOSE)
-#
-# CHOOSE is a sub called with a selected filename.
+our $openProgram = "gnome-open";
+
+# new FileList()
 sub new {
     my $self = bless {}, shift;
     return $self->initialize(@_);
 }
 
-# initialize(CHOOSE)
+# initialize()
 sub initialize {
     my $self = shift;
     $self->{suppressSystemFiles} = 1;
-    $self->{choose} = shift;
     $self->{files} = {};
     $self->{model} = new Gtk2::ListStore('Glib::String', # display filename
                                          'Glib::String', # % string
@@ -43,13 +42,22 @@ sub initialize {
     $self->{view}->get_selection()->signal_connect
         ('changed',
          sub { $self->selectionChanged(); });
-    # TODO right click on a row to produce a menu allowing at least
-    # refresh, select, open for editing
+    $self->{view}->signal_connect
+        ('button-press-event',
+         sub { $self->buttonPressed(@_); });
     $self->{view}->set_size_request(300, 300);
     $self->{scrolled} = new Gtk2::ScrolledWindow();
     $self->{scrolled}->set_policy('automatic', 'automatic');
     $self->{scrolled}->add($self->{view});
     return $self;
+}
+
+# setContents(FILECONTENTS)
+#
+# The object used to display file contents
+sub setContents($$) {
+    my $self = shift;
+    $self->{contents} = shift;
 }
 
 # Return the widget to display
@@ -88,7 +96,39 @@ sub getSelected($) {
 # Called when the selection may have changed
 sub selectionChanged($) {
     my $self = shift;
-    $self->{choose}->($self->getSelected());
+    $self->{contents}->select($self->getSelected());
+}
+
+# Called when a button is pressed
+sub buttonPressed($$$) {
+    my ($self, $widget, $event) = @_;
+    if($event->type() eq 'button-press'
+       and $event->button() == 3) {
+        # Select the target
+        my $path = $self->{view}->get_path_at_pos($event->x(), $event->y());
+        $self->{view}->get_selection()->select_path($path);
+        # Pop up a menu about it
+        my $menu = Greenend::ViewGCOV::MenuBar::populateMenu
+            (new Gtk2::Menu(),
+             Greenend::ViewGCOV::MenuBar::menuItem
+               ('gtk-refresh',
+                sub {
+                    my $path = $self->getSelected();
+                    $af = new Greenend::ViewGCOV::AnnotatedFile($path);
+                    if(defined $af) {
+                        $self->{files}->{$path} = $af;
+                        $self->{contents}->redraw();
+                    }
+                }),
+             Greenend::ViewGCOV::MenuBar::menuItem
+               ('gtk-edit',
+                sub {
+                    my $af = $self->{files}->{$self->getSelected()};
+                    system($openProgram, $af->sourcePath());
+                }));
+        $menu->show_all();
+        $menu->popup(undef, undef, undef, 0, $event->button, $event->time)
+    }
 }
 
 # isSystemFile(PATH)
@@ -111,7 +151,7 @@ sub addFile($$) {
     return if exists $self->{files}->{$path};
     # Report an error for files we cannot read
     if(!-r $path) {
-        error("cannot read $path"); # TODO
+        error("cannot read $path");
         return;
     }
     my $af = new Greenend::ViewGCOV::AnnotatedFile($path);
