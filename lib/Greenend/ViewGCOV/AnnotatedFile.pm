@@ -69,6 +69,19 @@ sub lineExecutionCount($$) {
     return $self->{lines}->[$n - 1]->{count};
 }
 
+# functionInfo(LINENO, KEY)
+#
+# Return function information.  KEY can be name, called, returned, blocks.
+sub functionInfo($$$) {
+    my ($self, $n, $key) = @_;
+    $self->parse() unless defined $self->{lines};
+    if(exists $self->{lines}->[$n - 1]->{function}) {
+        return $self->{lines}->[$n - 1]->{function}->{$key};
+    } else {
+        return undef;
+    }
+}
+
 sub sourcePath($) {
     my $self = shift;
     $self->parse() unless defined $self->{lines};
@@ -121,16 +134,28 @@ sub parseLine($$) {
     elsif(/^ *-: *(\d+):(.*)/)     { $self->textLine(-1,$1,$2); }
     elsif(/^ *(\d+): *(\d+):(.*)/) { $self->textLine($1,$2,$3); }
     elsif(/^ *#*: *(\d+):(.*)/)    { $self->textLine(0,$1,$2); }
+    elsif(/^function (\S+) called (\d+) returned (\d+)% blocks executed (\d+)%/) {
+        push(@{$self->{function}}, {
+            "name" => $1,
+            "called" => $2,
+            "returned" => $3,
+            "blocks" => $4
+        });
+    }
     # TODO extra annotations
 }
 
 sub textLine($$$$) {
     my ($self, $count, $number, $text) = @_;
-    push(@{$self->{lines}},
-         {
-             "text" => $text,
-             "count" => $count
-         });
+    my $line = {
+        "text" => $text,
+        "count" => $count
+    };
+    if(exists $self->{function}) {
+        $line->{function} = $self->{function}->[0];
+        delete $self->{function};
+    }
+    push(@{$self->{lines}}, $line);
 }
 
 1;

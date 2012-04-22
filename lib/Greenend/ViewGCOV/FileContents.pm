@@ -56,9 +56,39 @@ sub initialize {
     $self->{view}->signal_connect
         ('button-press-event',
          sub { $self->buttonPressed(@_); });
+    $self->{view}->signal_connect
+        ('leave-notify-event',
+         sub { $self->left(@_); });
+    $self->{view}->signal_connect
+        ('enter-notify-event',
+         sub { $self->motion(@_); });
+    $self->{view}->signal_connect
+        ('motion-notify-event',
+         sub { $self->motion(@_); });
+    $self->{view}->signal_connect
+        ('realize',
+         sub { 
+             my $gdkwindow = $self->{view}->get_parent_window();
+             my $eventmask = $gdkwindow->get_events();
+             $eventmask |= [ 'pointer-motion-mask' ];
+             $eventmask |= [ 'leave-notify-mask' ];
+             $eventmask |= [ 'enter-notify-mask' ];
+         });
     $self->{scrolled} = new Gtk2::ScrolledWindow();
     $self->{scrolled}->set_policy('automatic', 'automatic');
     $self->{scrolled}->add($self->{view});
+    $self->{scrolled}->get_vadjustment()->signal_connect
+        ("value-changed",
+         sub { $self->scrolled(@_); });
+    $self->{info} = new Gtk2::Window('popup');
+    $self->{info}->set_type_hint('tooltip');
+    $self->{info}->set_keep_above(1);
+    $self->{infobuffer} = new Gtk2::TextBuffer();
+    my $infoview = Gtk2::TextView->new_with_buffer($self->{infobuffer});
+    my $frame = new Gtk2::Frame();
+    $frame->add($infoview);
+    $frame->show_all();
+    $self->{info}->add($frame);
     return $self;
 }
 
@@ -76,9 +106,60 @@ sub widget($) {
     return $self->{scrolled};
 }
 
+# Called when the pointer leaves the window
+sub left($$$) {
+    my ($self, $widget, $event) = @_;
+    $self->{info}->hide();
+}
+
+# Called when the pointer moves within the window, or when it enters
+# the window.
+sub motion($$$) {
+    my ($self, $widget, $event) = @_;
+    my $path = $self->{view}->get_path_at_pos($event->x(), $event->y());
+    if(!defined $path) {
+        $self->{info}->hide();
+        return;
+    }
+    my @path = $path->get_indices();
+    my $line = $path[0] + 1;
+    $self->{infobuffer}->delete($self->{infobuffer}->get_bounds());
+    my $af = $self->{files}->getFile($self->{current});
+    my $function = $af->functionInfo($line, 'name');
+    my $display = 0;
+    if(defined $function) {
+        $self->{infobuffer}->insert
+            ($self->{infobuffer}->get_end_iter(),
+             sprintf("Function %s\n  Called %d times returned %d%%\n  %d%% of blocks executed\n",
+                     $function,
+                     $af->functionInfo($line, 'called'),
+                     $af->functionInfo($line, 'returned'),
+                     $af->functionInfo($line, 'blocks')));
+        $display = 1;
+    }
+    if($display) {
+        $self->{info}->move($event->x_root() + 8, $event->y_root() + 8);
+        $self->{info}->present();
+    } else {
+        $self->{info}->hide();
+    }
+}
+
+# Called when the window is scrolled
+sub scrolled($$$) {
+    my ($self) = @_;
+    # TODO we should figure out what we're looking at and update the
+    # info window accordingly.
+    $self->{info}->hide();
+}
+
 # Called when a button is pressed
 sub buttonPressed($$$) {
     my ($self, $widget, $event) = @_;
+    if($event->type() eq 'button-press'
+       and $event->button() == 1) {
+        return 1;
+    }
     if($event->type() eq 'button-press'
        and $event->button() == 3) {
         $self->{files}->contextMenu($event, $self->{current})
