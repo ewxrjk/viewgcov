@@ -27,6 +27,10 @@ contents, with uncovered lines marked in read.
 
 Displays a usage message.
 
+=item B<--version>
+
+Displays a version string.
+
 =back
 
 =head1 AUTHOR
@@ -48,6 +52,7 @@ while(@ARGV > 0 and $ARGV[0] =~ /^-/) {
 
 Options:
   --help       Display usage message
+  --version    Display version string
 
 Displays gcov output files below DIRECTORY (default=".").
 ";
