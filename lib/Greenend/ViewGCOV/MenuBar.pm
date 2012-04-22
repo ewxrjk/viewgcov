@@ -30,7 +30,6 @@ sub initialize {
     my $helpmenu = populateMenu
         (new Gtk2::Menu(),
          menuItem("gtk-about", sub { $self->about(); }));
-    # TODO there should be an 'About' menu
     $self->{menubar} = populateMenu
         (new Gtk2::MenuBar(),
          menuItem("File", $filemenu),
