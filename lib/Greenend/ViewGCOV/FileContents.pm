@@ -4,10 +4,18 @@ use warnings;
 
 our $notExecutableBackground = "#ffffff";
 our $notExecutableForeground = "#808080";
+
 our $notExecutedBackground = "#ffa0a0";
 our $notExecutedForeground = "#000000";
+
 our $executedBackground = "#ffffff";
 our $executedForeground = "#000000";
+
+our $notExecutedFunctionBackground = "#ff6060";
+our $notExecutedFunctionForeground = "#000000";
+
+our $executedFunctionBackground = "#a0ffa0";
+our $executedFunctionForeground = "#000000";
 # TODO above should be configurable
 
 # new FileContents()
@@ -204,16 +212,32 @@ sub redraw($) {
         my $count = $af->lineExecutionCount($n);
         my $text = $af->lineText($n);
         $where = $n - ($n != 1) - 1 if $count == 0 and !defined $where;
+        my ($fg, $bg);
+        my $function = $af->functionInfo($n, 'name');
+        if(defined $function) {
+            if($af->functionInfo($n, 'called') > 0) {
+                $bg = $executedFunctionBackground;
+                $fg = $executedFunctionForeground;
+            } else {
+                $bg = $notExecutedFunctionBackground;
+                $fg = $notExecutedFunctionForeground;
+            }
+        } elsif($count < 0) {
+            $bg = $notExecutableBackground;
+            $fg = $notExecutableForeground;
+        } elsif($count == 0) {
+            $bg = $notExecutedBackground;
+            $fg = $notExecutedForeground;
+        } else {
+            $bg = $executedBackground;
+            $fg = $executedForeground;
+        }
         $self->{model}->set($self->{model}->append(),
                             0, $n,
                             1, $count < 0 ? "-" : $count,
                             2, $text,
-                            3, $count < 0 ? $notExecutableBackground
-                            : $count == 0 ? $notExecutedBackground
-                                          : $executedBackground,
-                            4, $count < 0 ? $notExecutableForeground
-                            : $count == 0 ? $notExecutedForeground
-                                          : $executedForeground);
+                            3, $bg,
+                            4, $fg);
     }
     $self->{view}->scroll_to_cell(Gtk2::TreePath->new_from_indices($where));
     return $self;
