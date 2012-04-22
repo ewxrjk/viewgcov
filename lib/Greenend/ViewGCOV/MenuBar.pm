@@ -27,10 +27,14 @@ sub initialize {
              $self->{menubar}->get_ancestor('Gtk2::Window')->destroy();
                          }),
          $self->menuItem("Quit", sub { Gtk2->main_quit(); }));
+    my $helpmenu = $self->populateMenu
+        (new Gtk2::Menu(),
+         $self->menuItem("About", sub { $self->about(); }));
     # TODO there should be an 'About' menu
     $self->{menubar} = $self->populateMenu
         (new Gtk2::MenuBar(),
-         $self->menuItem("File", $filemenu));
+         $self->menuItem("File", $filemenu),
+         $self->menuItem("Help", $helpmenu));
     return $self;
 }
 
@@ -81,6 +85,18 @@ sub open($) {
 sub refresh($) {
     my $self = shift;
     $self->{files}->refresh();
+}
+
+sub about($) {
+    my $self = shift;
+    my $dialog = new Gtk2::MessageDialog
+        ($self->{menubar}->get_ancestor('Gtk2::Window'),
+         'destroy-with-parent',
+         'info',
+         'ok',
+         "viewgcov $main::VERSION");
+    $dialog->run();
+    $dialog->destroy();
 }
 
 1;

@@ -118,8 +118,6 @@ sub redraw($) {
 }
 
 # Called after a refresh
-#
-# TODO persist selection across refreshes
 sub refresh($) {
     my $self = shift;
     if(defined $self->{current} and !$self->{files}->has($self->current)) {
