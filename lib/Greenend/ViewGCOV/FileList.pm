@@ -107,28 +107,35 @@ sub buttonPressed($$$) {
         # Select the target
         my $path = $self->{view}->get_path_at_pos($event->x(), $event->y());
         $self->{view}->get_selection()->select_path($path);
-        # Pop up a menu about it
-        my $menu = Greenend::ViewGCOV::MenuBar::populateMenu
-            (new Gtk2::Menu(),
-             Greenend::ViewGCOV::MenuBar::menuItem
-               ('gtk-refresh',
-                sub {
-                    my $path = $self->getSelected();
-                    $af = new Greenend::ViewGCOV::AnnotatedFile($path);
-                    if(defined $af) {
-                        $self->{files}->{$path} = $af;
-                        $self->{contents}->redraw();
-                    }
-                }),
-             Greenend::ViewGCOV::MenuBar::menuItem
-               ('gtk-edit',
-                sub {
-                    my $af = $self->{files}->{$self->getSelected()};
-                    system($openProgram, $af->sourcePath());
-                }));
-        $menu->show_all();
-        $menu->popup(undef, undef, undef, 0, $event->button, $event->time)
+        $self->contextMenu($event, $self->getSelected());
+        return 1;
     }
+}
+
+# contextMenu(EVENT, PATH)
+#
+# Pop up a context menu
+sub contextMenu($$$) {
+    my ($self, $event, $path) = @_;
+    my $menu = Greenend::ViewGCOV::MenuBar::populateMenu
+        (new Gtk2::Menu(),
+         Greenend::ViewGCOV::MenuBar::menuItem
+         ('gtk-refresh',
+          sub {
+              $af = new Greenend::ViewGCOV::AnnotatedFile($path);
+              if(defined $af) {
+                  $self->{files}->{$path} = $af;
+                  $self->{contents}->redraw();
+              }
+          }),
+         Greenend::ViewGCOV::MenuBar::menuItem
+         ('gtk-edit',
+          sub {
+              my $af = $self->{files}->{$path};
+              system($openProgram, $af->sourcePath());
+          }));
+    $menu->show_all();
+    $menu->popup(undef, undef, undef, 0, $event->button, $event->time)
 }
 
 # isSystemFile(PATH)

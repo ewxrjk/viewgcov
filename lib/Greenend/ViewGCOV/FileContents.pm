@@ -53,6 +53,9 @@ sub initialize {
     $self->{view}->append_column($executed);
     $self->{view}->append_column($text);
     $self->{view}->set_size_request(720, 600);
+    $self->{view}->signal_connect
+        ('button-press-event',
+         sub { $self->buttonPressed(@_); });
     $self->{scrolled} = new Gtk2::ScrolledWindow();
     $self->{scrolled}->set_policy('automatic', 'automatic');
     $self->{scrolled}->add($self->{view});
@@ -71,6 +74,17 @@ sub setFiles($$) {
 sub widget($) {
     my $self = shift;
     return $self->{scrolled};
+}
+
+# Called when a button is pressed
+sub buttonPressed($$$) {
+    my ($self, $widget, $event) = @_;
+    if($event->type() eq 'button-press'
+       and $event->button() == 3) {
+        $self->{files}->contextMenu($event, $self->{current})
+            if defined $self->{current};
+        return 1;
+    }
 }
 
 # select(PATH)
