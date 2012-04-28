@@ -93,6 +93,8 @@ sub initialize {
     $self->{info}->set_type_hint('tooltip');
     $self->{info}->set_keep_above(1);
     $self->{infobuffer} = new Gtk2::TextBuffer();
+    $self->{infobuffer}->create_tag("red",
+                                    "foreground", "red");
     my $infoview = Gtk2::TextView->new_with_buffer($self->{infobuffer});
     my $frame = new Gtk2::Frame();
     $frame->add($infoview);
@@ -138,38 +140,61 @@ sub motion($$$) {
     my $branch = $af->branchInfo($line);
     my $display = 0;
     if(defined $function) {
-        $self->{infobuffer}->insert
-            ($self->{infobuffer}->get_end_iter(),
-             join("\n",
-                  map(sprintf("Function %s\n  Called %d times returned %d%%\n  %d%% of blocks executed",
-                              $_->{name},
-                              $_->{called},
-                              $_->{returned},
-                              $_->{blocks}),
-                      @$function)));
-        $display = 1;
+        for my $n (0 .. @$function - 1) {
+            $self->{infobuffer}->insert
+                ($self->{infobuffer}->get_end_iter(),
+                 "\n") if $display;
+            my $f = $function->[$n];
+            my $s = sprintf("Function %s\n  Called %d times returned %d%%\n  %d%% of blocks executed",
+                            $f->{name},
+                            $f->{called},
+                            $f->{returned},
+                            $f->{blocks});
+            if($f->{called}) {
+                $self->{infobuffer}->insert
+                    ($self->{infobuffer}->get_end_iter(),
+                     $s);
+            } else {
+                $self->{infobuffer}->insert_with_tags_by_name
+                    ($self->{infobuffer}->get_end_iter(),
+                     $s,
+                     "red");
+            }
+            $display = 1;
+        }
     }
     if(defined $branch) {
-        my @branchinfo = ();
-        for my $b (@$branch) {
+        for my $n (0 .. @$branch - 1) {
+            $self->{infobuffer}->insert
+                ($self->{infobuffer}->get_end_iter(),
+                 "\n") if $display;
+            my $b = $branch->[$n];
+            my ($action, $type, $never);
             if($b->{type} eq 'call') {
+                $type = "Call";
+                $action = "returned";
+                $never = "executed";
+            } elsif($b->{type} eq 'branch') {
+                $type = "Branch";
+                $action = "taken";
+                $never = "taken";
+            }
+            if(defined $action) {
                 if($b->{count} > 0) {
-                    push(@branchinfo, sprintf("call returned %d%%", $b->{count}));
+                    my $s = "$type $action $b->{count}%";
+                    $self->{infobuffer}->insert
+                        ($self->{infobuffer}->get_end_iter(),
+                         $s);
                 } else {
-                    push(@branchinfo, sprintf("call never executed"));
+                    my $s = "$type never $never";
+                    $self->{infobuffer}->insert_with_tags_by_name
+                        ($self->{infobuffer}->get_end_iter(),
+                         $s,
+                         "red");
                 }
-            } elsif($b->{type} = 'branch') {
-                if($b->{count} > 0) {
-                    push(@branchinfo, sprintf("branch taken %d%%", $b->{count}));
-                } else {
-                    push(@branchinfo, sprintf("branch never taken"));
-                }
+                $display = 1;
             }
         }
-        $self->{infobuffer}->insert
-            ($self->{infobuffer}->get_end_iter(),
-             join("\n", @branchinfo));
-        $display = 1;
     }
     if($display) {
         $self->{info}->move($event->x_root() + 8, $event->y_root() + 8);
@@ -241,7 +266,14 @@ sub redraw($) {
         my ($fg, $bg);
         my $function = $af->functionInfo($n, 'name');
         if(defined $function) {
-            if($af->functionInfo($n, 'called') > 0) {
+            my $called = 0;
+            for my $f (@$function) {
+                if($f->{called} > 0) {
+                    $called = 1;
+                    last;
+                }
+            }
+            if($called) {
                 $bg = $executedFunctionBackground;
                 $fg = $executedFunctionForeground;
             } else {
