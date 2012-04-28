@@ -139,11 +139,13 @@ sub motion($$$) {
     if(defined $function) {
         $self->{infobuffer}->insert
             ($self->{infobuffer}->get_end_iter(),
-             sprintf("Function %s\n  Called %d times returned %d%%\n  %d%% of blocks executed\n",
-                     $function,
-                     $af->functionInfo($line, 'called'),
-                     $af->functionInfo($line, 'returned'),
-                     $af->functionInfo($line, 'blocks')));
+             join("\n",
+                  map(sprintf("Function %s\n  Called %d times returned %d%%\n  %d%% of blocks executed",
+                              $_->{name},
+                              $_->{called},
+                              $_->{returned},
+                              $_->{blocks}),
+                      @$function)));
         $display = 1;
     }
     if($display) {

@@ -69,17 +69,14 @@ sub lineExecutionCount($$) {
     return $self->{lines}->[$n - 1]->{count};
 }
 
-# functionInfo(LINENO, KEY)
+# functionInfo(LINENO)
 #
-# Return function information.  KEY can be name, called, returned, blocks.
+# Return function information.  The return value is a list of dicts,
+# each dict containing  name, called, returned, blocks; or undef.
 sub functionInfo($$$) {
-    my ($self, $n, $key) = @_;
+    my ($self, $n) = @_;
     $self->parse() unless defined $self->{lines};
-    if(exists $self->{lines}->[$n - 1]->{function}) {
-        return $self->{lines}->[$n - 1]->{function}->{$key};
-    } else {
-        return undef;
-    }
+    return $self->{lines}->[$n - 1]->{function};
 }
 
 sub sourcePath($) {
@@ -152,7 +149,7 @@ sub textLine($$$$) {
         "count" => $count
     };
     if(exists $self->{function}) {
-        $line->{function} = $self->{function}->[0];
+        $line->{function} = $self->{function};
         delete $self->{function};
     }
     push(@{$self->{lines}}, $line);
