@@ -242,7 +242,8 @@ sub redraw($) {
                             3, $bg,
                             4, $fg);
     }
-    $self->{view}->scroll_to_cell(Gtk2::TreePath->new_from_indices($where));
+    $self->{view}->scroll_to_cell(Gtk2::TreePath->new_from_indices($where))
+        if defined $where;
     return $self;
 }
 
