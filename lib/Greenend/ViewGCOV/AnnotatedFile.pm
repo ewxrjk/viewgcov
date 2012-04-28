@@ -73,10 +73,21 @@ sub lineExecutionCount($$) {
 #
 # Return function information.  The return value is a list of dicts,
 # each dict containing  name, called, returned, blocks; or undef.
-sub functionInfo($$$) {
+sub functionInfo($$) {
     my ($self, $n) = @_;
     $self->parse() unless defined $self->{lines};
     return $self->{lines}->[$n - 1]->{function};
+}
+
+# branchInfo(LINENO)
+#
+# Return branch information.  The return value is a list of dicts,
+# each dict containing type, count; or undef.  type can be branch,
+# call or unconditional.  count is a percentage.
+sub branchInfo($$) {
+    my ($self, $n) = @_;
+    $self->parse() unless defined $self->{lines};
+    return $self->{lines}->[$n - 1]->{branch};
 }
 
 sub sourcePath($) {
@@ -138,6 +149,16 @@ sub parseLine($$) {
             "returned" => $3,
             "blocks" => $4
         });
+    } elsif(/^(branch|call|unconditional) +(\d+) (taken|returned) (\d+)%/) {
+        $self->addBranchInfo($2, {
+            "type" => $1,
+            "count" => $4
+        });
+    } elsif(/^(branch|call|unconditional) +(\d+) never executed/) {
+        $self->addBranchInfo($2, {
+            "type" => $1,
+            "count" => 0
+        });
     }
     # TODO extra annotations
 }
@@ -152,7 +173,17 @@ sub textLine($$$$) {
         $line->{function} = $self->{function};
         delete $self->{function};
     }
+    if(exists $self->{branch}) {
+        $line->{branch} = $self->{branch};
+        delete $self->{branch};
+    }
     push(@{$self->{lines}}, $line);
+}
+
+sub addBranchInfo($$$) {
+    my ($self, $branchno, $branchinfo) = @_;
+    my $last = (scalar @{$self->{lines}}) - 1;
+    $self->{lines}->[$last]->{branch}->[$branchno] = $branchinfo;
 }
 
 1;

@@ -134,7 +134,8 @@ sub motion($$$) {
     my $line = $path[0] + 1;
     $self->{infobuffer}->delete($self->{infobuffer}->get_bounds());
     my $af = $self->{files}->getFile($self->{current});
-    my $function = $af->functionInfo($line, 'name');
+    my $function = $af->functionInfo($line);
+    my $branch = $af->branchInfo($line);
     my $display = 0;
     if(defined $function) {
         $self->{infobuffer}->insert
@@ -146,6 +147,28 @@ sub motion($$$) {
                               $_->{returned},
                               $_->{blocks}),
                       @$function)));
+        $display = 1;
+    }
+    if(defined $branch) {
+        my @branchinfo = ();
+        for my $b (@$branch) {
+            if($b->{type} eq 'call') {
+                if($b->{count} > 0) {
+                    push(@branchinfo, sprintf("call returned %d%%", $b->{count}));
+                } else {
+                    push(@branchinfo, sprintf("call never executed"));
+                }
+            } elsif($b->{type} = 'branch') {
+                if($b->{count} > 0) {
+                    push(@branchinfo, sprintf("branch taken %d%%", $b->{count}));
+                } else {
+                    push(@branchinfo, sprintf("branch never taken"));
+                }
+            }
+        }
+        $self->{infobuffer}->insert
+            ($self->{infobuffer}->get_end_iter(),
+             join("\n", @branchinfo));
         $display = 1;
     }
     if($display) {
