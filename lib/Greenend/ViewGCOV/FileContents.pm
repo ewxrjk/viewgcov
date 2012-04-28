@@ -3,20 +3,24 @@ use warnings;
 use strict;
 use Gtk2;
 
-our $notExecutableBackground = "#ffffff";
-our $notExecutableForeground = "#808080";
+our %color = (
 
-our $notExecutedBackground = "#ffa0a0";
-our $notExecutedForeground = "#000000";
+  "notExecutableBackground" => "#ffffff",
+  "notExecutableForeground" => "#808080",
 
-our $executedBackground = "#ffffff";
-our $executedForeground = "#000000";
+  "notExecutedBackground" => "#ffa0a0",
+  "notExecutedForeground" => "#000000",
 
-our $notExecutedFunctionBackground = "#ff6060";
-our $notExecutedFunctionForeground = "#000000";
+  "executedBackground" => "#ffffff",
+  "executedForeground" => "#000000",
 
-our $executedFunctionBackground = "#a0ffa0";
-our $executedFunctionForeground = "#000000";
+  "notExecutedFunctionBackground" => "#ff6060",
+  "notExecutedFunctionForeground" => "#000000",
+
+  "executedFunctionBackground" => "#a0ffa0",
+  "executedFunctionForeground" => "#000000",
+
+);
 # TODO above should be configurable
 
 # new FileContents()
@@ -252,6 +256,34 @@ sub clear($) {
     return $self->redraw();
 }
 
+sub state($$) {
+    my $self = shift;
+    my $n = shift;
+    my $af = $self->{files}->getFile($self->{current});
+    my $count = $af->lineExecutionCount($n);
+    my $function = $af->functionInfo($n);
+    if(defined $function) {
+        my $called = 0;
+        for my $f (@$function) {
+            if($f->{called} > 0) {
+                $called = 1;
+                last;
+            }
+        }
+        if($called) {
+            return 'executedFunction';
+        } else {
+            return 'notExecutedFunction';
+        }
+    } elsif($count < 0) {
+        return 'notExecutable';
+    } elsif($count == 0) {
+        return 'notExecuted';
+    } else {
+        return 'executed';
+    }
+}
+
 # Force redraw
 sub redraw($) {
     my $self = shift;
@@ -263,39 +295,23 @@ sub redraw($) {
         my $count = $af->lineExecutionCount($n);
         my $text = $af->lineText($n);
         $where = $n - ($n != 1) - 1 if $count == 0 and !defined $where;
-        my ($fg, $bg);
-        my $function = $af->functionInfo($n, 'name');
-        if(defined $function) {
-            my $called = 0;
-            for my $f (@$function) {
-                if($f->{called} > 0) {
-                    $called = 1;
-                    last;
-                }
+        my $state = $self->state($n);
+        if($state eq 'notExecutable' && $n > 1 && $n < $af->linesTotal()) {
+            # A non-executable line between two not-executed lines is
+            # colored as the latter, to reduce distracting stripiness.
+            my $before = $self->state($n - 1);
+            my $after = $self->state($n + 1);
+            if($before eq $after
+               && $before eq 'notExecuted') {
+                $state = $before;
             }
-            if($called) {
-                $bg = $executedFunctionBackground;
-                $fg = $executedFunctionForeground;
-            } else {
-                $bg = $notExecutedFunctionBackground;
-                $fg = $notExecutedFunctionForeground;
-            }
-        } elsif($count < 0) {
-            $bg = $notExecutableBackground;
-            $fg = $notExecutableForeground;
-        } elsif($count == 0) {
-            $bg = $notExecutedBackground;
-            $fg = $notExecutedForeground;
-        } else {
-            $bg = $executedBackground;
-            $fg = $executedForeground;
         }
         $self->{model}->set($self->{model}->append(),
                             0, $n,
                             1, $count < 0 ? "-" : $count,
                             2, $text,
-                            3, $bg,
-                            4, $fg);
+                            3, $color{"${state}Background"},
+                            4, $color{"${state}Foreground"});
     }
     $self->{view}->scroll_to_cell(Gtk2::TreePath->new_from_indices($where))
         if defined $where;
