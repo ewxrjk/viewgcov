@@ -14,7 +14,7 @@ Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
  libgtk2-perl, binutils, gcc
 Description: view gcov output
- This program display all the *.gcov files in a directory, in descending
+ This program displays all the *.gcov files in a directory, in descending
  coverage order. Click on the filenames to see the contents, with uncovered
  lines marked in read. Hover over the source display for additional
  information.
