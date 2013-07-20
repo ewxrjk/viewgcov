@@ -91,11 +91,6 @@ sub open($) {
     $chooser->destroy();
 }
 
-sub refresh($) {
-    my $self = shift;
-    $self->{window}->{files}->refresh();
-}
-
 sub command {
     my $self = shift;
     my $title = shift;
@@ -149,14 +144,21 @@ sub runTests($) {
     my $files = $self->{window}->{files};
     my @cmd = ("find \Q$files->{directory}\E '(' -name '*.gcda' -o -name '*.gcov' ')' -delete",
                "make -C \Q$files->{directory}\E check",
-               "find \Q$files->{directory}\E '(' -name '*.[ch]' -o -name '*.cc' -o -name '*.hh' ')' -execdir gcov '{}' +");
+               "find \Q$files->{directory}\E '(' -name '*.[ch]' -o -name '*.cc' -o -name '*.hh' ')' -execdir gcov -a -b -u '{}' +");
 
-    # Delete droppings from previous tests
-    system();
     $self->command("Test output",
                    \@cmd,
                    sub { $files->refresh(); });
     # TODO should be a way to interrupt this if a test hangs
+}
+
+sub refresh($) {
+    my $self = shift;
+    my $files = $self->{window}->{files};
+    my @cmd = ("find \Q$files->{directory}\E '(' -name '*.[ch]' -o -name '*.cc' -o -name '*.hh' ')' -execdir gcov -a -b -u '{}' +");
+    $self->command("Test output",
+                   \@cmd,
+                   sub { $files->refresh(); });
 }
 
 sub about($) {
