@@ -46,9 +46,8 @@ sub initialize {
     $self->{view}->signal_connect
         ('button-press-event',
          sub { $self->buttonPressed(@_); });
-    $self->{view}->set_size_request(300, 300);
     $self->{scrolled} = new Gtk2::ScrolledWindow();
-    $self->{scrolled}->set_policy('automatic', 'automatic');
+    $self->{scrolled}->set_policy('never', 'automatic');
     $self->{scrolled}->add($self->{view});
     return $self;
 }
