@@ -93,17 +93,6 @@ sub initialize {
     $self->{scrolled}->get_vadjustment()->signal_connect
         ("value-changed",
          sub { $self->scrolled(@_); });
-    $self->{info} = new Gtk2::Window('popup');
-    $self->{info}->set_type_hint('tooltip');
-    $self->{info}->set_keep_above(1);
-    $self->{infobuffer} = new Gtk2::TextBuffer();
-    $self->{infobuffer}->create_tag("red",
-                                    "foreground", "red");
-    my $infoview = Gtk2::TextView->new_with_buffer($self->{infobuffer});
-    my $frame = new Gtk2::Frame();
-    $frame->add($infoview);
-    $frame->show_all();
-    $self->{info}->add($frame);
     return $self;
 }
 
@@ -122,9 +111,14 @@ sub widget($) {
 }
 
 # Called when the pointer leaves the window
+# (and at othre times to destroy the info hover)
 sub left($$$) {
     my ($self, $widget, $event) = @_;
-    $self->{info}->hide();
+    if(exists $self->{info}) {
+        $self->{info}->destroy();
+        delete $self->{info};
+        delete $self->{infoLine};
+    }
 }
 
 # Called when the pointer moves within the window, or when it enters
@@ -132,79 +126,99 @@ sub left($$$) {
 sub motion($$$) {
     my ($self, $widget, $event) = @_;
     my $path = $self->{view}->get_path_at_pos($event->x(), $event->y());
-    if(!defined $path) {
-        $self->{info}->hide();
-        return;
-    }
-    my @path = $path->get_indices();
-    my $line = $path[0] + 1;
-    $self->{infobuffer}->delete($self->{infobuffer}->get_bounds());
-    my $af = $self->{files}->getFile($self->{current});
-    my $function = $af->functionInfo($line);
-    my $branch = $af->branchInfo($line);
     my $display = 0;
-    if(defined $function) {
-        for my $n (0 .. @$function - 1) {
-            $self->{infobuffer}->insert
-                ($self->{infobuffer}->get_end_iter(),
-                 "\n") if $display;
-            my $f = $function->[$n];
-            my $s = sprintf("Function %s\n  Called %d times returned %d%%\n  %d%% of blocks executed",
-                            $self->demangle($f->{name}),
-                            $f->{called},
-                            $f->{returned},
-                            $f->{blocks});
-            if($f->{called}) {
-                $self->{infobuffer}->insert
-                    ($self->{infobuffer}->get_end_iter(),
-                     $s);
-            } else {
-                $self->{infobuffer}->insert_with_tags_by_name
-                    ($self->{infobuffer}->get_end_iter(),
-                     $s,
-                     "red");
-            }
-            $display = 1;
-        }
-    }
-    if(defined $branch) {
-        for my $n (0 .. @$branch - 1) {
-            $self->{infobuffer}->insert
-                ($self->{infobuffer}->get_end_iter(),
-                 "\n") if $display;
-            my $b = $branch->[$n];
-            my ($action, $type, $never);
-            if($b->{type} eq 'call') {
-                $type = "Call";
-                $action = "returned";
-                $never = "executed";
-            } elsif($b->{type} eq 'branch') {
-                $type = "Branch";
-                $action = "taken";
-                $never = "taken";
-            }
-            if(defined $action) {
-                if($b->{count} > 0) {
-                    my $s = "$type $action $b->{count}%";
+    if(defined $path) {
+        my @path = $path->get_indices();
+        my $line = $path[0] + 1;
+        # May need to reconsistute the info hover either if it does not
+        # exist or if it exists but refers to some other line
+        if(!exists $self->{info} or $self->{infoLine} != $line) {
+            # Zap existing data
+            $self->left($widget, $event);
+            # Create the hover
+            $self->{info} = new Gtk2::Window('popup');
+            $self->{info}->set_type_hint('tooltip');
+            $self->{info}->set_keep_above(1);
+            $self->{infoLine} = $line;
+            $self->{infobuffer} = new Gtk2::TextBuffer();
+            $self->{infobuffer}->create_tag("red",
+                                            "foreground", "red");
+            my $infoview = Gtk2::TextView->new_with_buffer($self->{infobuffer});
+            my $frame = new Gtk2::Frame();
+            $frame->add($infoview);
+            $frame->show_all();
+            $self->{info}->add($frame);
+            $self->{infobuffer}->delete($self->{infobuffer}->get_bounds());
+            # Populate it
+            my $af = $self->{files}->getFile($self->{current});
+            my $function = $af->functionInfo($line);
+            my $branch = $af->branchInfo($line);
+            if(defined $function) {
+                for my $n (0 .. @$function - 1) {
                     $self->{infobuffer}->insert
                         ($self->{infobuffer}->get_end_iter(),
-                         $s);
-                } else {
-                    my $s = "$type never $never";
-                    $self->{infobuffer}->insert_with_tags_by_name
-                        ($self->{infobuffer}->get_end_iter(),
-                         $s,
-                         "red");
+                         "\n") if $display;
+                    my $f = $function->[$n];
+                    my $s = sprintf("Function %s\n  Called %d times returned %d%%\n  %d%% of blocks executed",
+                                    $self->demangle($f->{name}),
+                                    $f->{called},
+                                    $f->{returned},
+                                    $f->{blocks});
+                    if($f->{called}) {
+                        $self->{infobuffer}->insert
+                            ($self->{infobuffer}->get_end_iter(),
+                             $s);
+                    } else {
+                        $self->{infobuffer}->insert_with_tags_by_name
+                            ($self->{infobuffer}->get_end_iter(),
+                             $s,
+                             "red");
+                    }
+                    $display = 1;
                 }
-                $display = 1;
             }
+            if(defined $branch) {
+                for my $n (0 .. @$branch - 1) {
+                    $self->{infobuffer}->insert
+                        ($self->{infobuffer}->get_end_iter(),
+                         "\n") if $display;
+                    my $b = $branch->[$n];
+                    my ($action, $type, $never);
+                    if($b->{type} eq 'call') {
+                        $type = "Call";
+                        $action = "returned";
+                        $never = "executed";
+                    } elsif($b->{type} eq 'branch') {
+                        $type = "Branch";
+                        $action = "taken";
+                        $never = "taken";
+                    }
+                    if(defined $action) {
+                        if($b->{count} > 0) {
+                            my $s = "$type $action $b->{count}%";
+                            $self->{infobuffer}->insert
+                                ($self->{infobuffer}->get_end_iter(),
+                                 $s);
+                        } else {
+                            my $s = "$type never $never";
+                            $self->{infobuffer}->insert_with_tags_by_name
+                                ($self->{infobuffer}->get_end_iter(),
+                                 $s,
+                                 "red");
+                        }
+                        $display = 1;
+                    }
+                }
+            }
+        } else {
+            $display = exists $self->{info};
         }
     }
     if($display) {
         $self->{info}->move($event->x_root() + 8, $event->y_root() + 8);
         $self->{info}->present();
     } else {
-        $self->{info}->hide();
+        $self->left($widget, $event);
     }
 }
 
@@ -213,7 +227,7 @@ sub scrolled($$$) {
     my ($self) = @_;
     # TODO we should figure out what we're looking at and update the
     # info window accordingly.
-    $self->{info}->hide();
+    $self->left(undef, undef);
 }
 
 # Called when a button is pressed
