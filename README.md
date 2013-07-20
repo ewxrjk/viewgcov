@@ -12,7 +12,7 @@ Dependencies
 Installation
 ------------
 
-To install module, run the following commands:
+To install, run the following commands:
 
     perl Makefile.PL
     make
@@ -21,8 +21,7 @@ To install module, run the following commands:
 Documentation
 -------------
 
-After installing, you can find documentation for this module with the
-perldoc command.
+After installing, you can find documentation with the perldoc command.
 
     perldoc viewgcov
 
