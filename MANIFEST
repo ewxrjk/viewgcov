@@ -1,6 +1,6 @@
 MANIFEST
 Makefile.PL
-README
+README.md
 COPYING
 lib/Greenend/ViewGCOV/AnnotatedFile.pm
 lib/Greenend/ViewGCOV/FileContents.pm
