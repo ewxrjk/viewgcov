@@ -16,5 +16,5 @@ Depends: ${misc:Depends}, ${perl:Depends},
 Description: view gcov output
  This program displays all the *.gcov files in a directory, in descending
  coverage order. Click on the filenames to see the contents, with uncovered
- lines marked in read. Hover over the source display for additional
+ lines marked in red. Hover over the source display for additional
  information.
