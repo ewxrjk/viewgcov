@@ -128,7 +128,9 @@ sub readable($) {
         }
         return 0;
     }
-    $buffer->insert_at_cursor($input);
+    my ($start, $end) = $buffer->get_bounds();
+    $buffer->insert($end, $input);
+    $buffer->move_mark($buffer->get_mark('insert'), $end);
     $self->{window}->{output}->scroll_to_mark($buffer->get_insert(),
                                               0, 0, 1, 1);
     return 1;
