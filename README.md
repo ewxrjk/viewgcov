@@ -18,8 +18,8 @@ To install module, run the following commands:
     make
     make install
 
-Support And Documentation
--------------------------
+Documentation
+-------------
 
 After installing, you can find documentation for this module with the
 perldoc command.
