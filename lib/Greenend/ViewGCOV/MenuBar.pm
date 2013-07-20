@@ -3,6 +3,8 @@ use warnings;
 use strict;
 use Greenend::ViewGCOV::Window;
 use Gtk2;
+use Glib;
+use IO::File;
 
 # new MenuBar(FILELIST, FILECONTENTS)
 sub new {
@@ -13,17 +15,18 @@ sub new {
 # initialize(FILELIST, FILECONTENTS)
 sub initialize {
     my $self = shift;
-    $self->{files} = shift;
-    $self->{contents} = shift;
+    $self->{window} = shift;
     my $filemenu = populateMenu
         (new Gtk2::Menu(),
          menuItem("New Window", sub {
              my $w = new Greenend::ViewGCOV::Window();
-             $w->{files}->setDirectory($self->{files}->{directory});
+             $w->{files}->setDirectory($self->{window}->{files}->{directory});
              $w->widget()->show_all();
          }),
          menuItem("gtk-open", sub { $self->open(); }),
          menuItem("gtk-refresh", sub { $self->refresh(); }),
+         menuItem("Compile", sub { $self->compile(); }),
+         menuItem("Run tests", sub { $self->runTests(); }),
          menuItem("gtk-close", sub {
              $self->{menubar}->get_ancestor('Gtk2::Window')->destroy();
                          }),
@@ -36,6 +39,7 @@ sub initialize {
          menuItem("File", $filemenu),
          menuItem("Help", $helpmenu));
     return $self;
+    # TODO Compile/Run Tests should be greyed out when underway
 }
 
 # Return the widget to display
@@ -81,15 +85,78 @@ sub open($) {
          'select-folder',
          'gtk-cancel' => 'cancel',
          'gtk-ok' => 'ok');
-    $chooser->set_current_folder($self->{files}->{directory});
-    $self->{files}->setDirectory($chooser->get_filename())
+    $chooser->set_current_folder($self->{window}->{files}->{directory});
+    $self->{window}->{files}->setDirectory($chooser->get_filename())
         if $chooser->run() eq 'ok';
     $chooser->destroy();
 }
 
 sub refresh($) {
     my $self = shift;
-    $self->{files}->refresh();
+    $self->{window}->{files}->refresh();
+}
+
+sub command {
+    my $self = shift;
+    my $title = shift;
+    my $cmd = shift;
+    my $complete = shift;
+    return if(exists $self->{subprocess});
+    if(ref $cmd ne 'ARRAY') {
+        $cmd = [$cmd];
+    }
+    $cmd = join(";", map(("echo \Q> $_\E", $_), @$cmd));
+    $self->{subprocess} = IO::File->new("exec 2>&1;$cmd|");
+    $self->{subprocess}->blocking(0);
+    my $buffer = $self->{window}->{output}->get_buffer();
+    my ($start, $end) = $buffer->get_bounds();
+    $buffer->delete($start, $end);
+    Glib::IO->add_watch($self->{subprocess}->fileno,
+                        [qw(in hup)],
+                        sub { return $self->readable($complete); });
+    $self->{window}->{outputTitle}->set_label($title);
+    $self->{window}->{outputPanel}->visible(1);
+}
+
+sub readable($) {
+    my $self = shift;
+    my $complete = shift;
+    my $buffer = $self->{window}->{output}->get_buffer();
+    my $input;
+    my $bytes = sysread($self->{subprocess}, $input, 4096);
+    if(!defined $bytes || $bytes == 0) {
+        delete $self->{subprocess};
+        if(defined $complete) {
+            &$complete();
+        }
+        return 0;
+    }
+    $buffer->insert_at_cursor($input);
+    $self->{window}->{output}->scroll_to_mark($buffer->get_insert(),
+                                              0, 0, 1, 1);
+    return 1;
+}
+
+sub compile($) {
+    my $self = shift;
+    my $files = $self->{window}->{files};
+    $self->command("Compiler output",
+                   "make -C \Q$files->{directory}\E");
+}
+
+sub runTests($) {
+    my $self = shift;
+    my $files = $self->{window}->{files};
+    my @cmd = ("find \Q$files->{directory}\E '(' -name '*.gcda' -o -name '*.gcov' ')' -delete",
+               "make -C \Q$files->{directory}\E check",
+               "find \Q$files->{directory}\E '(' -name '*.[ch]' -o -name '*.cc' -o -name '*.hh' ')' -execdir gcov '{}' +");
+
+    # Delete droppings from previous tests
+    system();
+    $self->command("Test output",
+                   \@cmd,
+                   sub { $files->refresh(); });
+    # TODO should be a way to interrupt this if a test hangs
 }
 
 sub about($) {
