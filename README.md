@@ -4,10 +4,15 @@ viewgcov
 This tool displays *.gcov files marked up to show lines which have not
 been covered, etc.
 
+Dependencies
+------------
+
+    apt-get install libgtk2-perl
+
 Installation
 ------------
 
-To install this module, run the following commands:
+To install module, run the following commands:
 
     perl Makefile.PL
     make

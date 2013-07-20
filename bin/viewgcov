@@ -17,7 +17,42 @@ B<viewgcov> [I<OPTIONS>] [B<-->] I<DIRECTORY>
 
 This program display all the B<*.gcov> files below I<DIRECTORY>, in
 descending coverage order.  Click on the filenames to see the
-contents, with uncovered lines marked in read.
+contents, with uncovered lines marked in read.  Hover over the source
+display for additional information.
+
+=head1 FILE MENU
+
+=over 4
+
+=item New Window
+
+Opens a new window (onto the same directory).
+
+=item Open
+
+Open a new directory (in the same window).
+
+=item Refresh
+
+Re-run B<gcov> on all source files.
+
+=item Compile
+
+Runs B<make>.
+
+=item Run Tests
+
+Runs B<make check> and then runs B<gcov> to regenerate coverage data.
+
+=item Close
+
+Closes the window.
+
+=item Quit
+
+Closes all windows.
+
+=back
 
 =head1 OPTIONS
 
