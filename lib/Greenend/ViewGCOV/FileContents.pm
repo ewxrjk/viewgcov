@@ -150,7 +150,7 @@ sub motion($$$) {
                  "\n") if $display;
             my $f = $function->[$n];
             my $s = sprintf("Function %s\n  Called %d times returned %d%%\n  %d%% of blocks executed",
-                            $f->{name},
+                            $self->demangle($f->{name}),
                             $f->{called},
                             $f->{returned},
                             $f->{blocks});
@@ -316,6 +316,21 @@ sub redraw($) {
     $self->{view}->scroll_to_cell(Gtk2::TreePath->new_from_indices($where))
         if defined $where;
     return $self;
+}
+
+sub demangle($$) {
+    my $self = shift;
+    my $mangled = shift;
+    if(!exists $self->{demangle}->{$mangled}) {
+        my $demangled = `echo \Q$mangled\E | c++filt`;
+        if($? == 0) {
+            chomp $demangled;
+            $self->{demangle}->{$mangled} = $demangled;
+        } else {
+            $self->{demangle}->{$mangled} = $mangled;
+        }
+    }
+    return $self->{demangle}->{$mangled};
 }
 
 1;
