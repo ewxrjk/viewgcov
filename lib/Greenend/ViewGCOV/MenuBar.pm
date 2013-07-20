@@ -108,18 +108,20 @@ sub command {
     $buffer->delete($start, $end);
     Glib::IO->add_watch($self->{subprocess}->fileno,
                         [qw(in hup)],
-                        sub { return $self->readable($complete); });
-    $self->{window}->{outputTitle}->set_label($title);
+                        sub { return $self->readable($complete, $title); });
+    $self->{window}->{outputTitle}->set_label("$title (running...)");
     $self->{window}->{outputPanel}->visible(1);
 }
 
 sub readable($) {
     my $self = shift;
     my $complete = shift;
+    my $title = shift;
     my $buffer = $self->{window}->{output}->get_buffer();
     my $input;
     my $bytes = sysread($self->{subprocess}, $input, 4096);
     if(!defined $bytes || $bytes == 0) {
+        $self->{window}->{outputTitle}->set_label("$title (complete)");
         delete $self->{subprocess};
         if(defined $complete) {
             &$complete();
