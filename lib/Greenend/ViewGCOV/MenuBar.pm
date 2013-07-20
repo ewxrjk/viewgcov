@@ -158,7 +158,7 @@ sub refresh($) {
     my $self = shift;
     my $files = $self->{window}->{files};
     my @cmd = ("find \Q$files->{directory}\E '(' -name '*.[ch]' -o -name '*.cc' -o -name '*.hh' ')' -execdir gcov -a -b -u '{}' +");
-    $self->command("Test output",
+    $self->command("Gcov output",
                    \@cmd,
                    sub { $files->refresh(); });
 }
