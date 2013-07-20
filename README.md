@@ -4,17 +4,17 @@ viewgcov
 This tool displays *.gcov files marked up to show lines which have not
 been covered, etc.
 
-
-INSTALLATION
+Installation
+------------
 
 To install this module, run the following commands:
 
-	perl Makefile.PL
-	make
-	make install
+    perl Makefile.PL
+    make
+    make install
 
-
-SUPPORT AND DOCUMENTATION
+Support And Documentation
+-------------------------
 
 After installing, you can find documentation for this module with the
 perldoc command.
@@ -22,9 +22,10 @@ perldoc command.
     perldoc viewgcov
 
 
-LICENSE AND COPYRIGHT
+License And Copyright
+---------------------
 
-Copyright (C) 2012 Richard Kettlewell
+Copyright © 2012, 2013 Richard Kettlewell
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
