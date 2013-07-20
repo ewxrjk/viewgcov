@@ -1,0 +1,20 @@
+Source: viewgcov
+Section: devel
+Priority: optional
+Maintainer: Richard Kettlewell <rjk@greenend.org.uk>
+Build-Depends: debhelper (>= 8)
+Build-Depends-Indep: libgtk2-perl,
+ perl,
+ perl-modules
+Standards-Version: 3.9.2
+Homepage: https://github.com/ewxrjk/viewgcov
+
+Package: viewgcov
+Architecture: all
+Depends: ${misc:Depends}, ${perl:Depends},
+ libgtk2-perl, binutils, gcc
+Description: view gcov output
+ This program display all the *.gcov files in a directory, in descending
+ coverage order. Click on the filenames to see the contents, with uncovered
+ lines marked in read. Hover over the source display for additional
+ information.
