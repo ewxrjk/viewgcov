@@ -130,11 +130,19 @@ sub contextMenu($$$) {
               }
           }),
          Greenend::ViewGCOV::MenuBar::menuItem
-         ('gtk-edit',
+         ('gtk-open',
           sub {
               my $af = $self->{files}->{$path};
               system($openProgram, $af->sourcePath());
-          }));
+          }),
+         Greenend::ViewGCOV::MenuBar::menuItem
+         ('Open location',
+          sub {
+              my $af = $self->{files}->{$path};
+              my ($v, $d, $f) = File::Spec->splitpath($af->sourcePath());
+              system($openProgram, $d);
+          }),
+        );
     $menu->show_all();
     $menu->popup(undef, undef, undef, 0, $event->button, $event->time)
 }
