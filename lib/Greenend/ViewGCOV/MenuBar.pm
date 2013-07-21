@@ -3,6 +3,7 @@ use warnings;
 use strict;
 use Greenend::ViewGCOV::Window;
 use Gtk2;
+use Gtk2::Gdk::Keysyms;
 use Glib;
 use IO::File;
 
@@ -16,24 +17,43 @@ sub new {
 sub initialize {
     my $self = shift;
     $self->{window} = shift;
+    my $new = menuItem("New Window", sub {
+        my $w = new Greenend::ViewGCOV::Window();
+        $w->{files}->setDirectory($self->{window}->{files}->{directory});
+    });
+    $new->add_accelerator('activate',  $self->{window}->{accelerators},
+                           $Gtk2::Gdk::Keysyms{n}, 'control-mask', 'visible');
+    my $open = menuItem("gtk-open", sub { $self->open(); });
+    $open->add_accelerator('activate', $self->{window}->{accelerators},
+                           $Gtk2::Gdk::Keysyms{o}, 'control-mask', 'visible');
+    my $refresh = menuItem("gtk-refresh", sub { $self->refresh(); });
+    $refresh->add_accelerator('activate',  $self->{window}->{accelerators},
+                              $Gtk2::Gdk::Keysyms{F5}, [], 'visible');
+    my $compile = menuItem("Compile", sub { $self->compile(); });
+    $compile->add_accelerator('activate',  $self->{window}->{accelerators},
+                              $Gtk2::Gdk::Keysyms{F6}, [], 'visible');
+    my $runTests = menuItem("Run tests", sub { $self->runTests(); });
+    $runTests->add_accelerator('activate',  $self->{window}->{accelerators},
+                               $Gtk2::Gdk::Keysyms{F7}, [], 'visible');
+    my $close = menuItem("gtk-close", sub { $self->{window}->{window}->destroy(); });
+    $close->add_accelerator('activate',  $self->{window}->{accelerators},
+                            $Gtk2::Gdk::Keysyms{w}, 'control-mask', 'visible');
+    my $quit = menuItem("gtk-quit", sub { Gtk2->main_quit(); });
+    $quit->add_accelerator('activate',  $self->{window}->{accelerators},
+                           $Gtk2::Gdk::Keysyms{q}, 'control-mask', 'visible');
+    my $about = menuItem("gtk-about", sub { $self->about(); });
     my $filemenu = populateMenu
         (new Gtk2::Menu(),
-         menuItem("New Window", sub {
-             my $w = new Greenend::ViewGCOV::Window();
-             $w->{files}->setDirectory($self->{window}->{files}->{directory});
-             $w->widget()->show_all();
-         }),
-         menuItem("gtk-open", sub { $self->open(); }),
-         menuItem("gtk-refresh", sub { $self->refresh(); }),
-         menuItem("Compile", sub { $self->compile(); }),
-         menuItem("Run tests", sub { $self->runTests(); }),
-         menuItem("gtk-close", sub {
-             $self->{menubar}->get_ancestor('Gtk2::Window')->destroy();
-                         }),
-         menuItem("gtk-quit", sub { Gtk2->main_quit(); }));
+         $new,
+         $open,
+         $refresh,
+         $compile,
+         $runTests,
+         $close,
+         $quit);
     my $helpmenu = populateMenu
         (new Gtk2::Menu(),
-         menuItem("gtk-about", sub { $self->about(); }));
+         $about);
     $self->{menubar} = populateMenu
         (new Gtk2::MenuBar(),
          menuItem("File", $filemenu),

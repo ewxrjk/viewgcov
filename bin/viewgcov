@@ -123,6 +123,4 @@ $window->{files}->setDirectory($directory);
 
 # Run the UI ------------------------------------------------------------------
 
-$window->widget()->show_all();
-$window->{outputPanel}->visible(0);
 Gtk2->main();

@@ -21,6 +21,8 @@ sub initialize($) {
     $self->{window}->signal_connect(destroy => sub {
         Gtk2->main_quit() if !--$windowCount;
     });
+    $self->{accelerators} = Gtk2::AccelGroup->new();
+    $self->{window}->add_accel_group($self->{accelerators});
     $self->{menubar} = new Greenend::ViewGCOV::MenuBar($self);
     my $vbox = new Gtk2::VBox(0, 0);
     my $vpane = new Gtk2::VPaned();
@@ -29,6 +31,8 @@ sub initialize($) {
     $vbox->pack_start($self->{menubar}->widget(), 0, 0, 1);
     $vbox->pack_start($vpane, 1, 1, 1);
     $self->{window}->add($vbox);
+    $self->{window}->show_all();
+    $self->{outputPanel}->visible(0);
     return $self;
 }
 
