@@ -129,7 +129,7 @@ sub command {
     Glib::IO->add_watch($self->{subprocess}->fileno,
                         [qw(in hup)],
                         sub { return $self->readable($complete, $title); });
-    $self->{window}->{outputTitle}->set_label("$title (running...)");
+    $self->{window}->{outputTitle}->set_markup("<b>$title (running...)</b>");
     $self->{window}->{outputPanel}->visible(1);
 }
 
