@@ -4,6 +4,7 @@ use warnings;
 use Gtk2 '-init';
 use Greenend::ViewGCOV::AnnotatedFile;
 use Greenend::ViewGCOV::Window;
+use File::Spec;
 
 =head1 NAME
 
@@ -113,6 +114,7 @@ if(@ARGV > 0) {
     $directory = shift;
     die "ERROR: specify at most one directory\n" if @ARGV > 0;
 }
+$directory = File::Spec->rel2abs($directory);
 die "ERROR: $directory is not readable\n" 
     if !-r $directory or !-x $directory;
 die "ERROR: $directory is not a directory\n" 

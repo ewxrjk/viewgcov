@@ -2,6 +2,7 @@ package Greenend::ViewGCOV::FileList;
 use warnings;
 use strict;
 use Gtk2;
+use File::Spec;
 
 our $openProgram = "gnome-open";
 
@@ -212,7 +213,8 @@ sub setDirectory($$) {
     $new =~ s,/+$,, unless $new =~ m,^/+$,;
     return if exists $self->{directory} and $new eq $self->{directory};
     $self->{directory} = $new;
-    $self->{view}->get_ancestor('Gtk2::Window')->set_title("viewgcov $new");
+    my ($v, $d, $f) = File::Spec->splitpath($new);
+    $self->{view}->get_ancestor('Gtk2::Window')->set_title("viewgcov: $f");
     $self->refresh();
 }
 
