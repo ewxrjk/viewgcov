@@ -90,7 +90,7 @@ Options:
   --help       Display usage message
   --version    Display version string
 
-Displays gcov output files below DIRECTORY (default=".").
+Displays gcov output files below DIRECTORY (default=\".\").
 ";
         exit 0;
     } elsif($opt eq '--version') {
