@@ -1,3 +1,14 @@
+viewgcov (0.2) unstable; urgency=low
+
+  * Fix compiler output panel cursor handling
+  * More concise window title
+  * Keyboard accelerators
+  * Bold compiler output panel title while running
+  * 'Open location' command
+  * Trivial bugfixes
+
+ -- Richard Kettlewell <rjk@greenend.org.uk>  Sat, 10 Aug 2013 10:07:01 +0100
+
 viewgcov (0.1) unstable; urgency=low
 
   * Initial Release.

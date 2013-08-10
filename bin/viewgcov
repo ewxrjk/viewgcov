@@ -75,7 +75,7 @@ Richard Kettlewell <rjk@greenend.org.uk>
 
 =cut
 
-our $VERSION = '0.1';
+our $VERSION = '0.2';
 
 # Command line ----------------------------------------------------------------
 
