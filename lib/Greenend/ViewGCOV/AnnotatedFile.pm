@@ -2,6 +2,7 @@ package Greenend::ViewGCOV::AnnotatedFile;
 use warnings;
 use strict;
 use IO::File;
+use open IN => ':locale';
 
 sub new {
     my $class = shift;
@@ -109,8 +110,8 @@ sub sourcePath($) {
 sub parse($) {
     my $self = shift;
     # Parse the .gcov file
-    my $input = new IO::File($self->{path}, "r");
-    die "opening $self->{path}: $!\n" unless defined $input;
+    open(my $input, "<", $self->{path})
+        or die "opening $self->{path}: $!\n";
     my $line;
     while(defined($line = $input->getline())) {
         chomp $line;
